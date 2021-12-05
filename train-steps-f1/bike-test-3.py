@@ -4,12 +4,13 @@ import random
 import math
 import neat
 import pickle
+from constants import *
+from func import *
+from bike import Bike
 pg.init()
 
 run = True
-cell_size = 16
-scl = 40
-win_size = (scl*cell_size, scl*cell_size)
+
 winner = pickle.load(open("step2.pkl", 'rb'))
 config_path = 'config-feedforward.txt'
 config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -17,86 +18,6 @@ config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                     config_path)
 model = neat.nn.FeedForwardNetwork.create(winner, config)
 
-win = pg.display.set_mode(win_size)
-pg.display.set_caption("SNAKE GAME")
-clock = pg.time.Clock()
-white_bike = pg.image.load('white_bike.png')
-yellow_bike = pg.image.load('yellow_bike.png')
-
-def distance(x, y, x1, y1):
-    ret = math.sqrt((x-x1)**2+(y-y1)**2)
-    return ret
-
-class Bike(object):
-        def __init__(self, x, y, height, width, colour, head):
-            self.x = x
-            self.y = y
-            self.height = height
-            self.width = width
-            self.vel = cell_size
-            self.dir = "stop"
-            self.tail_size = 20
-            self.tail_x = [self.x]*self.tail_size
-            self.tail_y = [self.y]*self.tail_size
-            self.colour = colour
-            self.head = head
-            self.max_loop = 1000 
-            self.max_till_now = 0
-            self.prev_cords = []
-
-# To draw the snake and the fruit
-        def move(self):
-            self.tail_x.pop(0)
-            self.tail_y.pop(0)
-            self.tail_x.append(self.x)
-            self.tail_y.append(self.y)
-            if self.dir == "up":
-                self.y -= self.vel
-            elif self.dir == "down":
-                self.y += self.vel
-            elif self.dir == "left":
-                self.x -= self.vel
-            elif self.dir == "right":
-                self.x += self.vel
-
-            if (self.x, self.y) in self.prev_cords:
-                self.max_till_now += 1
-            else: self.max_till_now = 0
-
-            self.prev_cords.append((self.x, self.y))
-            if len(self.prev_cords) > self.max_loop:
-                self.prev_cords.pop(0)
-
-        def draw(self):
-            for i in range(self.tail_size):
-                pg.draw.rect(
-                    win, (self.colour[0], self.colour[1], self.colour[2]), (self.tail_x[i], self.tail_y[i], self.width, self.height))
-
-                dir_head = self.head
-
-                if self.dir == "up":
-                    dir_head = pg.transform.rotate(self.head, 180)
-                elif self.dir == "down":
-                    dir_head = pg.transform.rotate(self.head, 0)
-                elif self.dir == "left":
-                    dir_head = pg.transform.rotate(self.head, -90)
-                elif self.dir == "right":
-                    dir_head = pg.transform.rotate(self.head, 90)
-
-                win.blit(dir_head, (self.x, self.y, self.width, self.height))
-
-        def die(self):
-            if self.y < 0 or self.y > scl*cell_size-self.height or self.x < 0 or self.x > scl*cell_size-self.width:
-               return True, -200
-
-            for i in range(self.tail_size):
-                if distance(self.x, self.y, self.tail_x[i], self.tail_y[i]) < cell_size and self.dir!="stop":
-                    return True, -350
-
-            if self.max_till_now > self.max_loop:
-                return True, -500
-
-            return False, 0
 
 def redrawgamewindow(bikes, bikes_comp):
     win.fill((0, 0, 0))
@@ -107,27 +28,6 @@ def redrawgamewindow(bikes, bikes_comp):
             bike_comp.draw()
 
     pg.display.update()
-
-def sign(x):
-    if x == 0: return 0
-    return x/abs(x)
-
-def is_tch(crd, tail, dr):
-    x, y = crd
-    tx, ty = tail
-    dx = tx - x
-    dy = ty - y
-
-    if sign(dx) != dr[0] or sign(dy) != dr[1]: return False
-    
-    if dr[1]==0: a, b, c = 0, 1, -y
-    elif dr[0] == 0: a, b, c = 1, 0, -x
-    else: a, b, c = -dr[1], dr[0], -dr[0]*y + dr[1]*x
-
-    dst = abs(a*tx + b*ty + c)/(a**2 + b**2)**0.5
-    if dst <= 1: return True
-
-
 
 def start_test(config_path):        
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -167,7 +67,7 @@ def game_loop(genomes, config):
 
 
     while run and len(bikes) > 0:
-        clock.tick(800)
+        clock.tick(clock_speed)
 
     # To check the events done in the window
         for event in pg.event.get():

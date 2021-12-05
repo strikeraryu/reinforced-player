@@ -4,46 +4,16 @@ import random
 import math
 import pickle
 import neat
+from constants import *
+from func import *
 pg.init()
 
-cell_size = 16
-scl = 40
-win_size = (scl*cell_size, scl*cell_size)
 winner = pickle.load(open("step3.pkl", 'rb'))
 config_path = 'config-feedforward.txt'
 config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
                     config_path)
 model = neat.nn.FeedForwardNetwork.create(winner, config)
-
-win = pg.display.set_mode(win_size)
-pg.display.set_caption("SNAKE GAME")
-clock = pg.time.Clock()
-white_bike = pg.image.load('white_bike.png')
-yellow_bike = pg.image.load('yellow_bike.png')
-
-def distance(x, y, x1, y1):
-    ret = math.sqrt((x-x1)**2+(y-y1)**2)
-    return ret
-
-def sign(x):
-    if x == 0: return 0
-    return x/abs(x)
-
-def is_tch(crd, tail, dr):
-    x, y = crd
-    tx, ty = tail
-    dx = tx - x
-    dy = ty - y
-
-    if sign(dx) != dr[0] or sign(dy) != dr[1]: return False
-    
-    if dr[1]==0: a, b, c = 0, 1, -y
-    elif dr[0] == 0: a, b, c = 1, 0, -x
-    else: a, b, c = -dr[1], dr[0], -dr[0]*y + dr[1]*x
-
-    dst = abs(a*tx + b*ty + c)/(a**2 + b**2)**0.5
-    if dst <= 1: return True
 
 class Bike(object):
         def __init__(self, x, y, height, width, colour, head):
@@ -100,7 +70,6 @@ class Bike(object):
                 if distance(self.x, self.y, self.tail_x[i], self.tail_y[i]) < cell_size and self.dir!="stop":
                     return True
 
-
 def redrawgamewindow(bike_white, bike_yellow):
     win.fill((0, 0, 0))
     pg.draw.line(win, (255, 0, 0), (0, 0), (0, scl*cell_size), width=1)
@@ -136,13 +105,7 @@ def start_test(config_path):
     winner = p.run(game_loop,50)
     print('\nBest genome:\n{!s}'.format(winner))
 
-def sign(x):
-    if x == 0: return 0
-    return x/abs(x)
-
 def game_loop():
-    
-
     run = True
     bike_white = Bike(cell_size * 30, cell_size * 20, cell_size, cell_size, (255, 255, 255), white_bike)
     bike_yellow = Bike(cell_size * 20, cell_size * 20, cell_size, cell_size, (255, 255, 0), yellow_bike)
